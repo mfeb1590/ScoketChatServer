@@ -76,9 +76,9 @@ io.on('connection', function (socket) {
         //io.to : User who has joined can get a event;
         //socket.broadcast.to : all the users except the user who has joined will get the message
         // socket.broadcast.to(`${roomName}`).emit('newUserToChatRoom',userName);
-        io.to(`${roomName}`).emit('newUserToChatRoom', userName);
+        io.to(`${roomName}`).emit('newUserToChatRoom', roomName);
     }
-
+    
     )
 
     socket.on('unsubscribe', function (data) {
@@ -102,10 +102,12 @@ io.on('connection', function (socket) {
         userName = room_data.userName;
         const roomName = room_data.roomName;
         socket.join(`${roomName}`)
+
+        
         console.log(`Username : ${userName} joined Room Name : ${roomName}`)
         socketUsers.push(userName)
         addSocketUsers(roomName, userName)
-        io.to(`${roomName}`).emit('newUserToChatRoom', userName);
+        io.to(`${roomName}`).emit('newUserToChatRoom', roomName);
     })
 
     socket.on('notifyOthersOnNewUser', function (data) {
@@ -182,6 +184,8 @@ io.on('connection', function (socket) {
         const roomName = messageData.roomName
         const mimiType = messageData.mimiType
         const fileNameModified = messageData.fileNameModified
+        const isUc = messageData.isUc
+        const uc = messageData.uc
 
         console.log(`[Room Number ${roomName}] ${userName} : ${messageContent}`)
         // Just pass the data that has been passed from the writer socket
@@ -191,7 +195,9 @@ io.on('connection', function (socket) {
             messageContent: messageContent,
             roomName: roomName,
             mimiType: mimiType,
-            fileNameModified: fileNameModified
+            fileNameModified: fileNameModified,
+            isUc :isUc,
+            uc: uc,
         }
         socket.broadcast.to(`${roomName}`).emit('updateChat', JSON.stringify(chatData)) // Need to be parsed into Kotlin object in Kotlin
     })
@@ -226,11 +232,9 @@ io.on('connection', function (socket) {
         console.log('songDedicationRequest triggered')
 
         const dedication_request_data = JSON.parse(data)
-        const dedicatorName = dedication_request_data.dedicatorName;
-        const dedicatedSongName = dedication_request_data.songName;
         const roomName = dedication_request_data.roomName;
         // console.log("roomName is"+roomName)
-
+        console.log("link is"+data)
         socket.broadcast.to(`${roomName}`).emit('songDedicationRequestEvent', data)
 
         //checking room exist or not
@@ -326,6 +330,16 @@ io.on('connection', function (socket) {
     })
 
 
+
+    //syncing clicked song
+    socket.on('syncClickedSong', function (data) {
+
+        console.log('syncClickedSong Triggered')
+        const request_data = JSON.parse(data)
+        console.log("request data"+request_data)
+        socket.broadcast.to(`${request_data.roomName}`).emit('syncClickedSongEvent', data)
+
+    })
 
 
 
